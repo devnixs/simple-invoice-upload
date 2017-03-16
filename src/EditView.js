@@ -120,8 +120,15 @@ export default class EditView extends Component {
 
                             var body = new FormData();
                             var date = this.state.date || new Date();
+                            var formattedDate = "";
+                            try {
+                                formattedDate = date.getDate() + '-' + (date.getMonth() + 1) + '-' + date.getFullYear()
+                            } catch (e) {
+                                formattedDate = date.toString();
+                            }
+
                             body.append('file', photo)
-                            body.append('date', date.getDate() + '-' + (date.getMonth() + 1) + '-' + date.getFullYear());
+                            body.append('date', formattedDate);
                             body.append('number', values.invoiceNumber);
                             var xhr = new XMLHttpRequest()
                             xhr.open('POST', 'http://invoices-demo.herokuapp.com/api/invoice/');
