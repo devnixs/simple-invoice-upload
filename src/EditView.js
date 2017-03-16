@@ -37,11 +37,10 @@ export default class EditView extends Component {
         this.setState({ formData: formData })
     }
 
-
     render() {
         const { params } = this.props.navigation.state;
-        
-        
+
+
         return (<ScrollView style={styles.container}>
 
             <Image source={{ uri: params.path }} style={{ width: 400, height: 200 }}></Image>
@@ -103,7 +102,7 @@ export default class EditView extends Component {
                         }
                     }}
                     onSubmit={(isValid, values, validationResults, postSubmit = null, modalNavigator = null) => {
-                        if (!values.invoiceNumber || values.invoiceNumber.trim()) {
+                        if (!values.invoiceNumber || !values.invoiceNumber.trim()) {
                             Alert.alert(
                                 'Erreur de validation',
                                 'Le numéro de facture est incorrect',
@@ -111,11 +110,47 @@ export default class EditView extends Component {
                             postSubmit();
                         }
                         else {
-                            this.props.onSendInvoice({
-                                done: postSubmit,
-                                date: this.state.date,
-                                number: values.invoiceNumber
-                            });
+
+                            const { params } = this.props.navigation.state;
+                            var photo = {
+                                uri: params.path,
+                                type: 'image/jpeg',
+                                name: 'photo.jpg',
+                            };
+
+                            var body = new FormData();
+                            var date = this.state.date || new Date();
+                            body.append('file', photo)
+                            body.append('date', date.getDate() + '-' + (date.getMonth() + 1) + '-' + date.getFullYear());
+                            body.append('number', values.invoiceNumber);
+                            var xhr = new XMLHttpRequest()
+                            xhr.open('POST', 'http://invoices-demo.herokuapp.com/api/invoice/');
+                            xhr.send(body);
+
+                            xhr.onreadystatechange = (e) => {
+                                if (xhr.readyState !== 4) {
+                                    return;
+                                }
+
+                                if (xhr.status === 200) {
+                                    console.log('success', xhr.responseText);
+                                } else {
+                                    postSubmit();
+                                    const { navigate } = this.props.navigation;
+                                    navigate('Home');
+                                }
+                            };
+
+                            xhr.onerror = (error) => {
+                                console.log(error);
+                            }
+
+                            xhr.onload = () => {
+                                const { navigate } = this.props.navigation;
+                                postSubmit();
+                                navigate('Home');
+                            }
+
                         }
                     }}
                 />
